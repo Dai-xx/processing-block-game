@@ -4,12 +4,13 @@ int i, j;
 boolean w_flag, a_flag, s_flag, d_flag; // block atari hanntei
 boolean is_alive[][] = new boolean[5][5];
 int facing_flag; //0=top, 1=left, 2=bottom, 3=right
+PImage arrow;
 
 void setup() {
   //px = width/2;
   //py = height/2;
-  px = 50;
-  py = 50;
+  px = 16;
+  py = 16;
   ps = 16;
  
   block_w = ps;
@@ -20,6 +21,9 @@ void setup() {
       is_alive[i][j] = true;
     }
   }
+ 
+ arrow = loadImage("arrow.png");
+ println("img", arrow);
  
   size(640, 480);
  
@@ -35,8 +39,7 @@ void draw() {
   pr = px+ps;
   pt = py;
   pb = py+ps;
-  
-  println("px py", px, py);
+ 
  
   // BLOCK
   w_flag = false;
@@ -80,25 +83,18 @@ void draw() {
   // BLOCK
   
   // PLAYER
-  //pushMatrix();
-    
-    PVector a = new PVector(mouseX - width/2, -1*(mouseY - height/2));
-    PVector b = new PVector(px, py);
-    PVector c = PVector.sub(a, b);
-    float rad = calc_angle(new PVector(1, 0), c);
+  PVector a = new PVector((mouseX - width/2), -(mouseY - height/2));
+  PVector b = new PVector(px, -py);
+  PVector c = PVector.sub(a, b);
+  float rad = calc_angle(new PVector(1, 0), c);
   
-    //triangle((pl+pr)/2, pt, pr, pb, pl, pb);
-    //drawRect(px,py,ps,ps);
-    drawRect(0,0,10,10);
-  //popMatrix();
+  
   pushMatrix();
+    translate(px+ps/2, py+ps/2);
     //println(b.x, -b.y);
     fill(0);
-    translate(px+ps/2, py+ps/2);
-    drawRect(0,0,10,10);
     rotate(a.y >= b.y ? -(rad - HALF_PI) : (rad + HALF_PI));
-    drawRect(-ps/2,-ps/2,ps,ps);
-    //triangle((pl+pr)/2, pt, pr, pb, pl, pb);
+    image(arrow, -ps/2,-ps/2, ps, ps);
   popMatrix();
   
 }
@@ -108,7 +104,7 @@ void drawRect(float x, float y, float w ,float h) {
   rect(x,y,w,h);
 }
 
-Float calc_angle(PVector a, PVector b){
+float calc_angle(PVector a, PVector b){
   float cos_theta = a.dot(b) / (a.mag() * b.mag());
   float theta = acos(cos_theta);
   return theta;
