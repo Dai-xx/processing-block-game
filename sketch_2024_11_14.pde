@@ -1,13 +1,13 @@
 float px, py, ps, pl, pr, pt, pb;
 float bx, by, block_w, block_h;
-int i, j;
+int i, j, rows, cols;
 boolean w_flag, a_flag, s_flag, d_flag; // block atari hanntei\
 boolean clicked;
 //boolean is_alive[][] = new boolean[5][5];
-int is_alive[][] = new int[5][5];
+int is_alive[][] = new int[6][6];
 int facing_flag;
 PVector a,b,c;
-PImage arrow,top,bottom,right,left,player,axe;
+PImage arrow,top,bottom,right,left,player,axe,block_sokumen,block_tenjo,block_corner,block_strate;
 
 // 減算の間隔（ミリ秒単位）
 int interval = 500;  // 500ミリ秒ごとに減算を実行
@@ -24,11 +24,18 @@ void setup() {
   block_w = ps;
   block_h = ps;
   
-  for(int i=0;i<5;i++){
-    for(int j=0;j<5;j++){
+  rows = 6;
+  cols = 6;
+  
+  for(int i=0;i<cols;i++){
+    for(int j=0;j<rows;j++){
       is_alive[i][j] = 3;
     }
   }
+  
+ setOuterValuesToZero(is_alive);
+ 
+ printArray(is_alive);
  
  arrow = loadImage("imgs/arrow.png");
  top = loadImage("imgs/top.png");
@@ -36,12 +43,16 @@ void setup() {
  left = loadImage("imgs/left.png");
  right = loadImage("imgs/right.png");
  axe = loadImage("imgs/axe.png");
+ block_sokumen = loadImage("imgs/sokumen.png");
+ block_tenjo = loadImage("imgs/tenjo.png");
+ block_corner = loadImage("imgs/corner3.png");
+ block_strate = loadImage("imgs/strate.png");
  
   size(640, 480);
  
-  noStroke();
+  
   smooth();
-  frameRate(30);
+  frameRate(60);
   background(255,255,255);
 }
 
@@ -52,6 +63,8 @@ void draw() {
   pr = px+ps;
   pt = py;
   pb = py+ps;
+  
+  //camera();
  
  
   // BLOCK
@@ -60,16 +73,31 @@ void draw() {
   s_flag = false;
   d_flag = false;
   
-  for(i=0;i<5;i++){
-    for(j=0;j<5;j++){
-      bx = i*block_w+64;
-      by = j*block_h+64;
+  for(i=0;i<cols;i++){
+    for(j=0;j<rows;j++){
+      bx = i*block_w+32;
+      by = j*block_h+32;
        
       
       if(is_alive[i][j] > 0)
       {
-        fill(84);
-        rect(bx, by, block_w, block_h, 20);
+        if (is_alive[i-1][j]==0 & is_alive[i][j-1]==0) {
+          image(block_corner, bx, by, block_w, block_h);
+        } else if (is_alive[i+1][j]==0 & is_alive[i][j-1]==0) {
+          drawBlock(block_corner, bx, by, PI/2);
+        } else {
+          image(block_tenjo, bx, by, block_w, block_h);
+        }
+        
+        
+        if (is_alive[i][j+1] == 0) {
+          image(block_sokumen, bx, by+block_h, block_w, block_h * 3 / 4);
+        } 
+        
+        fill(0);
+        rect(px, py, 4, 4);
+        rect(pr, pb, 4, 4);
+        rect(bx, by, 4, 4);
       
        // W
        if((pt == by+block_h && pl >= bx && pr <= bx+block_w)){
@@ -137,7 +165,7 @@ void draw() {
 
   
   pushMatrix();
-    translate(px+ps/2, py+ps/2);
+    translate(px, py);
     fill(0);
     //rotate(a.y >= b.y ? -(rad - HALF_PI) : (rad + HALF_PI));
     //image(arrow, -ps/2,-ps/2, ps, ps);
@@ -153,20 +181,9 @@ void draw() {
     //rotate(-PI/8);
     //image(axe, -ps/2-10,-ps/2, 28, 28);
     //rotate(PI/8);
-    image(player, -ps/2,-ps/2, ps, ps);
+    image(player, 0, ps-player.height, ps, ps);
   popMatrix();
   
-}
-
-void drawRect(float x, float y, float w ,float h) {
-  fill(0,0,0);
-  rect(x,y,w,h);
-}
-
-float calc_angle(PVector a, PVector b){
-  float cos_theta = a.dot(b) / (a.mag() * b.mag());
-  float theta = acos(cos_theta);
-  return theta;
 }
 
 void keyPressed(){
@@ -183,4 +200,55 @@ void keyPressed(){
     if(!d_flag) 
     px += ps;
   }
+}
+
+void setOuterValuesToZero(int[][] array) {
+  int rows = array.length;
+  int cols = array[0].length;
+
+  // 上辺（左から右）
+  for (int col = 0; col < cols; col++) {
+    array[0][col] = 0;
+  }
+
+  // 右辺（上から下、ただし最上部と最下部は除く）
+  for (int row = 1; row < rows - 1; row++) {
+    array[row][cols - 1] = 0;
+  }
+
+  // 下辺（右から左）
+  for (int col = cols - 1; col >= 0; col--) {
+    array[rows - 1][col] = 0;
+  }
+
+  // 左辺（下から上、ただし最上部と最下部は除く）
+  for (int row = rows - 2; row > 0; row--) {
+    array[row][0] = 0;
+  }
+}
+
+void printArray(int[][] array) {
+  for (int[] row : array) {
+    println(row);
+  }
+}
+
+void drawRect(float x, float y, float w ,float h) {
+  fill(0,0,0);
+  rect(x,y,w,h);
+}
+
+void drawBlock(PImage img, float x, float y, float rad) {
+  pushMatrix();
+    translate(x+ps/2, y+ps/2);
+    rotate(rad);
+    image(img, -ps/2, -ps/2, block_w, block_h);
+  popMatrix();
+}
+
+
+float calc_angle(PVector a, PVector b){
+  float cos_theta = a.dot(b) / (a.mag() * b.mag());
+  float theta = acos(cos_theta);
+  return theta;
 }
